@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7B班每日作业 & 上交统计</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f0f4f8;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: linear-gradient(135deg, #1a237e, #283593);
+  color: white;
+  padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  position: sticky; top: 0; z-index: 100;
+  flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+.live-clock {
+  font-size: 36px; font-weight: 800; color: #ffd600;
+  background: rgba(255,255,255,0.12); border: 2px solid rgba(255,213,0,0.5);
+  padding: 6px 18px; border-radius: 22px;
+  letter-spacing: 3px; white-space: nowrap;
+  animation: clockPulse 2s ease-in-out infinite;
+}
+@keyframes clockPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,213,0,0.3); }
+  50% { box-shadow: 0 0 16px rgba(255,213,0,0.6); }
+}
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stats { font-size: 13px; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; }
+.deadline-badge { font-size: 12px; background: rgba(255,193,7,0.25); border: 1px solid rgba(255,193,7,0.5); color: #ffe082; padding: 4px 10px; border-radius: 20px; }
+.btn { border: none; padding: 7px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.btn-orange { background: #ff6b35; color: white; }
+.btn-orange:hover { background: #e55a26; transform: scale(1.04); }
+.btn-orange:disabled { background: #999; cursor: not-allowed; transform: none; opacity: 0.6; }
+.btn-ghost { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+.btn-ghost:hover { background: rgba(255,255,255,0.3); }
+.btn-record { background: #7c3aed; color: white; }
+.btn-record:hover { background: #6d28d9; transform: scale(1.04); }
+
+/* ===== DATE BAR ===== */
+.date-bar {
+  background: white; padding: 10px 20px;
+  display: flex; align-items: center; gap: 16px;
+  border-bottom: 1px solid #e0e0e0; flex-wrap: wrap;
+}
+.date-bar label { font-size: 14px; color: #555; font-weight: 500; }
+.date-bar input[type=date] { border: 1px solid #ccc; border-radius: 8px; padding: 5px 10px; font-size: 14px; color: #333; }
+.date-bar-hint { font-size: 12px; color: #aaa; }
+#saveIndicator { font-size: 12px; color: #43a047; font-weight: 600; opacity: 0; transition: opacity 0.3s; margin-left: auto; }
+
+/* ===== HOMEWORK PANEL ===== */
+.homework-panel {
+  background: white;
+  border-bottom: 2px solid #e8eaf6;
+}
+.homework-header {
+  background: linear-gradient(135deg, #283593, #3949ab);
+  color: white; padding: 10px 20px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.homework-header h2 { font-size: 20px; font-weight: 700; }
+.hw-sync-badge { font-size: 11px; background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 12px; }
+
+/* 作业 + 提醒 并排布局 */
+.homework-content {
+  display: flex;
+  border-bottom: 2px solid #e8eaf6;
+}
+.homework-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  padding: 0;
+  flex: 7;
+  min-width: 0;
+}
+.hw-subject {
+  padding: 14px 16px;
+  border-right: 1px solid #e8eaf6;
+  display: flex; flex-direction: column;
+}
+.hw-subject:last-child { border-right: none; }
+
+/* 提醒事项面板 */
+.reminder-panel {
+  flex: 3;
+  min-width: 0;
+  border-left: 3px solid #ff9800;
+  display: flex; flex-direction: column;
+  background: #fff8e1;
+}
+.reminder-header {
+  background: linear-gradient(135deg, #e65100, #f57c00);
+  color: white; padding: 10px 16px;
+  display: flex; align-items: center; gap: 6px;
+}
+.reminder-header h2 { font-size: 18px; font-weight: 700; }
+.reminder-body {
+  padding: 12px 14px; flex: 1;
+  display: flex; flex-direction: column;
+}
+.reminder-text-display {
+  font-size: 26px; color: #333; line-height: 1.8;
+  min-height: 80px; flex: 1;
+  word-break: break-all; white-space: pre-wrap;
+  font-weight: 500;
+}
+.reminder-text-display b, .reminder-text-display strong { font-weight: 800; }
+.reminder-text-display .hl { padding: 0 4px; border-radius: 3px; }
+.reminder-text-display.empty { color: #bbb; font-style: italic; }
+.reminder-text-display img,
+.reminder-editable img {
+  max-width: 100%; height: auto;
+  border-radius: 6px; margin: 4px 0;
+  display: block;
+}
+
+.reminder-editable {
+  width: 100%; border: 1px solid #ffe0b2; border-radius: 6px;
+  padding: 8px 10px; font-size: 16px; font-family: inherit;
+  min-height: 80px; outline: none; flex: 1;
+  transition: border-color 0.2s; line-height: 1.8;
+  background: #fff; word-break: break-all;
+}
+.reminder-editable:focus { border-color: #f57c00; box-shadow: 0 0 0 2px rgba(245,124,0,0.15); }
+.reminder-editable:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb; font-style: italic;
+}
+.reminder-format-bar {
+  display: none; align-items: center; gap: 3px;
+  padding: 4px 0 6px; flex-wrap: wrap;
+  border-top: 1px dashed #ffe0b2; margin-top: 4px;
+}
+.reminder-format-bar.show { display: flex; }
+.btn-save-reminder {
+  background: #f57c00; color: white; border: none;
+  padding: 6px 16px; border-radius: 16px; cursor: pointer;
+  font-size: 13px; font-weight: 700; transition: all 0.2s;
+  margin-top: 8px;
+}
+.btn-save-reminder:hover { background: #e65100; transform: scale(1.04); }
+
+/* 响应式：小屏上下排列 */
+@media (max-width: 900px) {
+  .homework-content { flex-direction: column; }
+  .reminder-panel { border-left: none; border-top: 3px solid #ff9800; }
+}
+
+.hw-subject-label {
+  font-size: 18px; font-weight: 700; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hw-subject-label .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+
+/* 只读模式 - 教室大屏展示 */
+.hw-text-display {
+  font-size: 28px; color: #333; line-height: 1.8;
+  min-height: 56px; flex: 1;
+  word-break: break-all;
+  white-space: pre-wrap;
+  font-weight: 500;
+  padding: 4px 0;
+}
+.hw-text-display b, .hw-text-display strong { font-weight: 800; }
+.hw-text-display .hl { padding: 0 4px; border-radius: 3px; }
+.hw-text-display.empty { color: #bbb; font-style: italic; }
+
+/* 编辑模式 - contenteditable */
+.hw-editable {
+  width: 100%; border: 1px solid #c5cae9; border-radius: 6px;
+  padding: 8px 10px; font-size: 16px; font-family: inherit;
+  min-height: 60px; outline: none; flex: 1;
+  transition: border-color 0.2s;
+  line-height: 1.8;
+  background: #fff;
+  word-break: break-all;
+}
+.hw-editable:focus { border-color: #3949ab; box-shadow: 0 0 0 2px rgba(57,73,171,0.15); }
+.hw-editable:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb; font-style: italic;
+}
+
+/* 格式工具栏 */
+.hw-format-bar {
+  display: none;  /* 默认隐藏，编辑模式显示 */
+  align-items: center; gap: 3px;
+  padding: 4px 0 6px; flex-wrap: wrap;
+  border-top: 1px dashed #e0e0e0; margin-top: 4px;
+}
+.hw-format-bar.show { display: flex; }
+.hw-fmt-btn {
+  border: 1px solid #ccc; background: #fff;
+  border-radius: 4px; cursor: pointer; font-size: 13px;
+  padding: 3px 8px; font-weight: 600;
+  transition: all 0.15s; white-space: nowrap;
+  line-height: 1.4;
+}
+.hw-fmt-btn:hover { background: #e8eaf6; border-color: #5c6bc0; }
+.hw-fmt-btn.active { background: #3949ab; color: white; border-color: #3949ab; }
+.hw-fmt-color-dot {
+  display: inline-block; width: 14px; height: 14px;
+  border-radius: 3px; vertical-align: middle; margin-right: 2px;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
+.hw-edit-bar {
+  padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+  border-top: 1px solid #e8eaf6;
+  background: #f8f9ff;
+  flex-wrap: wrap;
+}
+.hw-edit-bar .tip {
+  font-size: 13px; color: #888; margin-left: auto;
+}
+.btn-save-hw {
+  background: #3949ab; color: white; border: none;
+  padding: 7px 20px; border-radius: 16px; cursor: pointer;
+  font-size: 13px; font-weight: 700; transition: all 0.2s;
+}
+.btn-save-hw:hover { background: #283593; transform: scale(1.04); }
+.btn-toggle-edit {
+  background: transparent; border: 1px solid #3949ab; color: #3949ab;
+  padding: 6px 14px; border-radius: 16px; cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: all 0.2s;
+  margin-left: auto;
+}
+.btn-toggle-edit:hover { background: #e8eaf6; }
+.hw-save-hint { font-size: 12px; color: #43a047; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+.hw-last-updated { font-size: 11px; color: #aaa; margin-left: auto; }
+
+/* ===== LEGEND ===== */
+.legend {
+  display: flex; gap: 10px; padding: 10px 20px;
+  background: white; border-bottom: 1px solid #e8e8e8; flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+
+/* ===== CONTAINER ===== */
+.container { padding: 12px 32px; max-width: 1600px; margin: 0 auto; }
+.progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 0 8px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #81c784); border-radius: 2px; transition: width 0.4s ease; }
+
+/* ===== TABLE ===== */
+.table-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.table-header { display: grid; grid-template-columns: 60px 1fr 1fr 1fr 1fr 1fr; background: #1a237e; color: white; font-size: 14px; font-weight: 600; }
+.table-header-cell { padding: 12px 6px; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); }
+.student-row { display: grid; grid-template-columns: 60px 1fr 1fr 1fr 1fr 1fr; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
+.student-row:hover { background: #fafafa; }
+.student-row:last-child { border-bottom: none; }
+.num-cell { display: flex; align-items: center; justify-content: center; font-size: 13px; color: #888; font-weight: 500; border-right: 1px solid #f0f0f0; padding: 6px 4px; }
+.subject-cell { padding: 6px 5px; display: flex; align-items: center; justify-content: center; }
+.tag { display: inline-flex; align-items: center; justify-content: center; padding: 7px 6px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; user-select: none; width: 100%; text-align: center; line-height: 1.3; min-height: 44px; word-break: break-all; }
+.tag:hover { transform: scale(1.03); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+.tag:active { transform: scale(0.97); }
+.tag.done { background: #4a4a4a !important; color: #bdbdbd !important; text-decoration: line-through; border-color: #555 !important; }
+.tag.done:hover { background: #5a5a5a !important; }
+.subj-0 { background: #ffebee; color: #c62828; border: 1.5px solid #ef9a9a; }
+.subj-1 { background: #fff3e0; color: #e65100; border: 1.5px solid #ffcc02; }
+.subj-2 { background: #fffde7; color: #f57f17; border: 1.5px solid #fff176; }
+.subj-3 { background: #e8f5e9; color: #2e7d32; border: 1.5px solid #a5d6a7; }
+.subj-4 { background: #e3f2fd; color: #1565c0; border: 1.5px solid #90caf9; }
+
+/* ===== RECORDS ===== */
+.records-section { margin-top: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; }
+.records-header { background: linear-gradient(135deg, #4a148c, #6a1b9a); color: white; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.records-header h2 { font-size: 16px; font-weight: 700; }
+.records-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-export-csv { background: #43a047; color: white; border: none; padding: 7px 14px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.btn-export-csv:hover { background: #388e3c; transform: scale(1.04); }
+.btn-export-txt { background: #f57c00; color: white; border: none; padding: 7px 14px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.btn-export-txt:hover { background: #e65100; transform: scale(1.04); }
+.btn-clear-records { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 7px 14px; border-radius: 16px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.btn-clear-records:hover { background: rgba(255,255,255,0.25); }
+.records-body { padding: 0; max-height: 500px; overflow-y: auto; }
+.record-day { border-bottom: 1px solid #f0f0f0; }
+.record-day:last-child { border-bottom: none; }
+.record-day-header { padding: 10px 18px; background: #f3e5f5; font-size: 14px; font-weight: 700; color: #4a148c; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.record-day-header:hover { background: #ede7f6; }
+.record-day-content { padding: 8px 18px 12px; }
+.record-day-content.collapsed { display: none; }
+.missing-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.missing-table th { background: #7c3aed; color: white; padding: 7px 10px; text-align: left; font-weight: 600; }
+.missing-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+.missing-table tr:last-child td { border-bottom: none; }
+.missing-table tr:nth-child(even) td { background: #fafafa; }
+.missing-chip { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 2px; }
+.missing-0 { background: #ffebee; color: #c62828; }
+.missing-1 { background: #fff3e0; color: #e65100; }
+.missing-2 { background: #fffde7; color: #f57f17; border: 1px solid #ffe082; }
+.missing-3 { background: #e8f5e9; color: #2e7d32; }
+.missing-4 { background: #e3f2fd; color: #1565c0; }
+.no-records { padding: 32px; text-align: center; color: #bbb; font-size: 14px; }
+.record-count-badge { background: #7c3aed; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.all-submitted { color: #43a047; font-size: 13px; font-style: italic; }
+.deadline-action-bar { background: #fff8e1; border-top: 1px solid #ffe082; border-bottom: 1px solid #ffe082; padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.deadline-action-bar .hint { font-size: 13px; color: #7b5e00; flex: 1; }
+.btn-snap { background: #f57c00; color: white; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; }
+.btn-snap:hover { background: #e65100; transform: scale(1.04); }
+
+/* ===== EXPORT DATE RANGE ===== */
+.export-bar {
+  background: #f3e5f5; padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-bottom: 1px solid #d1c4e9;
+}
+.export-bar span { font-size: 13px; color: #4a148c; font-weight: 600; }
+.export-range-btn {
+  background: #fff; color: #4a148c; border: 1px solid #ce93d8;
+  padding: 5px 12px; border-radius: 14px; cursor: pointer;
+  font-size: 12px; font-weight: 600; transition: all 0.15s;
+}
+.export-range-btn:hover, .export-range-btn.active { background: #7c3aed; color: white; border-color: #7c3aed; }
+.export-range-input { border: 1px solid #ccc; border-radius: 6px; padding: 4px 8px; font-size: 12px; }
+.export-range-spacer { color: #aaa; font-size: 12px; }
+
+/* ===== SUBJECT SUMMARY ===== */
+.subject-summary { padding: 12px 18px; }
+.subject-line {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid #f5f0ff;
+  font-size: 14px; line-height: 1.6;
+  flex-wrap: wrap;
+}
+.subject-line:last-child { border-bottom: none; }
+.subj-label-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-weight: 700; white-space: nowrap; min-width: 56px;
+}
+.subj-dot-sm { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.subj-done-badge { color: #43a047; font-weight: 700; }
+.subj-missing-list { color: #555; flex: 1; }
+.subj-missing-list .name-tag {
+  display: inline-block; padding: 2px 8px; margin: 2px 3px;
+  border-radius: 12px; font-size: 13px; font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ===== TOAST ===== */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.75); color: white; padding: 10px 24px; border-radius: 24px; font-size: 14px; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 9999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== SCHEDULE BAR 今日课表 ===== */
+.schedule-section {
+  background: #e3f2fd;
+  border-bottom: 2px solid #90caf9;
+}
+.schedule-bar {
+  background: #e3f2fd;
+  color: #1a237e; padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.schedule-save-bar {
+  padding: 8px 20px;
+  display: flex; align-items: center; gap: 10px;
+  border-top: 1px solid #90caf9;
+  background: #bbdefb;
+}
+.schedule-bar h3 {
+  font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; margin-right: 4px; color: #1565c0;
+}
+.schedule-grid {
+  display: flex; flex: 1; gap: 6px; flex-wrap: wrap;
+}
+.schedule-cell {
+  background: #fff;
+  border: 1px solid #90caf9;
+  border-radius: 8px; padding: 4px 10px;
+  font-size: 13px; min-width: 72px; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 36px; position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.schedule-cell:hover { background: #e3f2fd; transform: scale(1.04); border-color: #42a5f5; }
+.schedule-cell .cell-label { font-size: 11px; color: #5c6bc0; font-weight: 600; margin-bottom: 2px; white-space: nowrap; }
+.schedule-cell .cell-text {
+  font-size: 18px; font-weight: 700; line-height: 1.4; color: #283593;
+  max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.schedule-cell input.cell-input {
+  background: #fff; border: 1px solid #64b5f6;
+  border-radius: 5px; color: #1a237e; font-size: 16px; font-weight: 600;
+  padding: 3px 6px; width: 80px; text-align: center; outline: none;
+}
+.schedule-cell input.cell-input::placeholder { color: #90caf9; font-weight: 400; }
+.schedule-cell.is-empty { border-style: dashed; background: #f5f8ff; }
+.schedule-break {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: #e65100;
+  padding: 0 6px; white-space: nowrap; min-width: 40px;
+}
+.btn-schedule-edit {
+  background: #42a5f5; color: white;
+  border: none;
+  padding: 5px 14px; border-radius: 16px; cursor: pointer;
+  font-size: 12px; font-weight: 600; transition: all 0.2s; white-space: nowrap;
+}
+.btn-schedule-edit:hover { background: #1e88e5; }
+
+/* ===== VOICE PANEL 语音广播 ===== */
+.voice-panel {
+  background: #fff9c4;
+  color: #333; padding: 12px 24px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-bottom: 2px solid #f9a825;
+}
+.voice-panel h3 {
+  font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.voice-input {
+  flex: 1; min-width: 200px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.7);
+  color: #333; border-radius: 8px;
+  padding: 8px 14px; font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.voice-input::placeholder { color: #999; }
+.voice-input:focus { border-color: #f9a825; background: #fff; }
+.btn-voice-send {
+  background: #ff8f00; color: white; border: none;
+  padding: 8px 20px; border-radius: 20px; cursor: pointer;
+  font-size: 14px; font-weight: 700; transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-voice-send:hover { background: #e65100; transform: scale(1.04); }
+.btn-voice-send:disabled { background: #ccc; color: #999; cursor: not-allowed; transform: none; }
+.btn-voice-stop {
+  background: rgba(0,0,0,0.06); color: #666;
+  border: 1px solid rgba(0,0,0,0.15);
+  padding: 8px 14px; border-radius: 20px; cursor: pointer;
+  font-size: 13px; transition: all 0.2s; white-space: nowrap;
+}
+.btn-voice-stop:hover { background: rgba(255,82,82,0.2); color: #c62828; border-color: #ff5252; }
+.voice-status {
+  font-size: 12px; color: #888; white-space: nowrap;
+}
+.voice-last-msg {
+  font-size: 11px; color: #999;
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 700px) {
+  .homework-grid { grid-template-columns: 1fr 1fr; }
+  .hw-subject:nth-child(2n) { border-right: none; }
+  .hw-subject { border-bottom: 1px solid #e8eaf6; }
+  .voice-panel { padding: 10px 14px; gap: 8px; }
+  .voice-panel h3 { font-size: 13px; }
+  .voice-input { min-width: 140px; font-size: 13px; }
+  .container { padding: 12px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 7B班作业 & 上交统计</h1>
+  <span class="live-clock" id="liveClock">⏰ 00:00</span>
+  <div class="header-right">
+    <div class="deadline-badge" id="deadlineBadge">⏰ 截止 21:00</div>
+    <div class="stats" id="stats">已交: 0 / 105</div>
+    <button class="btn btn-ghost" onclick="resetAll()">重置</button>
+    <button class="btn btn-orange" id="undoBtn" onclick="undoLast()" disabled>↩ 撤回</button>
+    <button class="btn btn-record" onclick="scrollToRecords()">📋 未交记录</button>
+  </div>
+</div>
+
+<!-- 语音广播面板（老师端可发送，教室端自动播报） -->
+<div class="voice-panel" id="voicePanel">
+  <h3>🎙️ 语音广播</h3>
+  <input type="text" class="voice-input" id="voiceInput" placeholder="输入要播报的文字，如：张三请到办公室来一下..." onkeydown="if(event.key==='Enter')sendVoice()">
+  <button class="btn-voice-send" id="voiceSendBtn" onclick="sendVoice()">📢 发送播报</button>
+  <button class="btn-voice-stop" id="voiceStopBtn" onclick="stopVoice()" style="display:none">⏹ 停止播报</button>
+  <button class="btn-voice-stop" id="voiceMuteBtn" onclick="toggleVoiceMute()" style="display:none">🔇 静音</button>
+  <span class="voice-status" id="voiceStatus">就绪</span>
+  <span class="voice-last-msg" id="voiceLastMsg"></span>
+</div>
+
+<!-- 今日课表 -->
+<div class="schedule-section">
+  <div class="schedule-bar" id="scheduleBar">
+    <h3>📅 今日课表</h3>
+    <div class="schedule-grid" id="scheduleGrid">
+      <!-- JS 动态渲染 -->
+    </div>
+    <button class="btn-schedule-edit" id="scheduleEditBtn" onclick="toggleScheduleEdit()" style="display:none">✏️ 编辑课表</button>
+  </div>
+  <div class="schedule-save-bar" id="scheduleSaveBar" style="display:none">
+    <button class="btn-save-hw" onclick="saveSchedule()">💾 保存课表（同步到教室）</button>
+    <span class="hw-save-hint" id="scheduleSaveHint">✅ 已保存</span>
+  </div>
+</div>
+
+<!-- 作业展示区 -->
+<div class="homework-panel">
+  <div class="homework-header">
+    <h2>📝 今日作业</h2>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="hw-sync-badge" id="hwSyncBadge">🔄 同步中...</span>
+      <button class="btn-toggle-edit" id="toggleEditBtn" onclick="toggleEditMode()" style="display:none">✏️ 编辑作业</button>
+    </div>
+  </div>
+
+  <div class="homework-content">
+    <div class="homework-grid" id="homeworkGrid">
+      <!-- 动态渲染 -->
+    </div>
+
+    <!-- 提醒事项 -->
+    <div class="reminder-panel">
+      <div class="reminder-header">
+        <span style="font-size:20px">📌</span>
+        <h2>7B广播台</h2>
+      </div>
+      <div class="reminder-body">
+        <div class="reminder-text-display empty" id="reminderDisplay">暂无广播</div>
+        <div class="reminder-format-bar" id="reminderFmtBar">
+          <button class="hw-fmt-btn" onclick="fmtBold('reminderEdit',event)" title="加粗"><b>B</b></button>
+          <button class="hw-fmt-btn" onclick="fmtHighlight('reminderEdit','#FFEB3B',event)" title="黄色高光"><span class="hw-fmt-color-dot" style="background:#FFEB3B"></span>高光</button>
+          <button class="hw-fmt-btn" onclick="fmtHighlight('reminderEdit','#A5D6A7',event)" title="绿色高光"><span class="hw-fmt-color-dot" style="background:#A5D6A7"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtHighlight('reminderEdit','#FFCDD2',event)" title="红色高光"><span class="hw-fmt-color-dot" style="background:#FFCDD2"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtHighlight('reminderEdit','#BBDEFB',event)" title="蓝色高光"><span class="hw-fmt-color-dot" style="background:#BBDEFB"></span></button>
+          <span style="color:#ccc;margin:0 2px;">|</span>
+          <button class="hw-fmt-btn" onclick="fmtForeColor('reminderEdit','#c62828',event)" title="红字"><span class="hw-fmt-color-dot" style="background:#c62828"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtForeColor('reminderEdit','#1565c0',event)" title="蓝字"><span class="hw-fmt-color-dot" style="background:#1565c0"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtForeColor('reminderEdit','#2e7d32',event)" title="绿字"><span class="hw-fmt-color-dot" style="background:#2e7d32"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtForeColor('reminderEdit','#e65100',event)" title="橙字"><span class="hw-fmt-color-dot" style="background:#e65100"></span></button>
+          <button class="hw-fmt-btn" onclick="fmtForeColor('reminderEdit','#333333',event)" title="黑字（还原）">A</button>
+          <span style="color:#ccc;margin:0 2px;">|</span>
+          <button class="hw-fmt-btn" onclick="fmtClear('reminderEdit',event)" title="清除格式">✕ 清除</button>
+          <span style="color:#ccc;margin:0 2px;">|</span>
+          <button class="hw-fmt-btn" onclick="fmtFontSize('reminderEdit','14px',event)" title="小号">A₋</button>
+          <button class="hw-fmt-btn" onclick="fmtFontSize('reminderEdit','20px',event)" title="正常">A</button>
+          <button class="hw-fmt-btn" onclick="fmtFontSize('reminderEdit','28px',event)" title="大号">A₊</button>
+          <span style="color:#ccc;margin:0 2px;">|</span>
+          <button class="hw-fmt-btn" onclick="insertReminderImage()" title="插入图片">🖼 图片</button>
+        </div>
+        <div class="reminder-editable" id="reminderEdit" contenteditable="true" data-placeholder="填写提醒事项，如：明天穿校服、带回执单..." style="display:none"></div>
+        <input type="file" id="reminderImgInput" accept="image/*" style="display:none" onchange="handleReminderImage(event)">
+        <button class="btn-save-reminder" id="saveReminderBtn" style="display:none" onclick="saveReminder()">💾 保存提醒</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hw-edit-bar" id="hwEditBar" style="display:none">
+    <button class="btn-save-hw" onclick="saveHomework()">💾 保存作业（同步到教室）</button>
+    <span class="hw-save-hint" id="hwSaveHint">✅ 已保存</span>
+    <span class="tip">💡 选中文字后点击格式按钮加粗/高亮/变色</span>
+    <span class="hw-last-updated" id="hwLastUpdated"></span>
+  </div>
+</div>
+
+<div class="date-bar">
+  <label>📅 日期：</label>
+  <input type="date" id="dateInput" onchange="onDateChange()">
+  <span class="date-bar-hint">💾 每次操作自动保存 · 关闭页面不丢失</span>
+  <span id="saveIndicator">💾 已保存</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#ef9a9a"></div>语文（红）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffcc02"></div>数学（橙）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fff176;border:1px solid #ccc"></div>英语（黄）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a5d6a7"></div>科学（绿）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#90caf9"></div>社会（蓝）</div>
+  <div class="legend-item" style="margin-left:auto;color:#888;font-size:12px">点击标签标记已交 · 再次点击取消</div>
+</div>
+
+<div class="deadline-action-bar" id="deadlineActionBar" style="display:none">
+  <span class="hint" id="deadlineHint">⚠️ 已到截止时间（21:00），请点击"生成今日未交记录"保存未交名单。</span>
+  <div id="snapBtnArea"><button class="btn-snap" onclick="snapMissing()">📸 生成今日未交记录</button></div>
+</div>
+
+<div class="container">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="table-wrapper">
+    <div class="table-header">
+      <div class="table-header-cell">学号</div>
+      <div class="table-header-cell">🔴 语文</div>
+      <div class="table-header-cell">🟠 数学</div>
+      <div class="table-header-cell">🟡 英语</div>
+      <div class="table-header-cell">🟢 科学</div>
+      <div class="table-header-cell">🔵 社会</div>
+    </div>
+    <div id="studentList"></div>
+  </div>
+
+  <div class="records-section" id="recordsSection">
+    <div class="records-header">
+      <h2>📋 未交作业记录</h2>
+      <div class="records-header-btns">
+        <span id="exportCount" style="font-size:12px;opacity:0.8"></span>
+        <button class="btn-export-csv" onclick="exportByRange('csv')">⬇ 导出 CSV</button>
+        <button class="btn-export-txt" onclick="exportByRange('txt')">⬇ 导出文本</button>
+        <button class="btn-clear-records" onclick="clearAllRecords()">🗑 清空</button>
+      </div>
+    </div>
+    <div class="export-bar" id="exportBar">
+      <span>📅 导出范围：</span>
+      <button class="export-range-btn active" data-range="today" onclick="setExportRange('today',this)">今日</button>
+      <button class="export-range-btn" data-range="week" onclick="setExportRange('week',this)">本周</button>
+      <button class="export-range-btn" data-range="month" onclick="setExportRange('month',this)">本月</button>
+      <button class="export-range-btn" data-range="all" onclick="setExportRange('all',this)">全部</button>
+      <span class="export-range-spacer">|</span>
+      <input type="date" class="export-range-input" id="exportStart" onchange="setExportRange('custom')">
+      <span class="export-range-spacer">至</span>
+      <input type="date" class="export-range-input" id="exportEnd" onchange="setExportRange('custom')">
+    </div>
+    <div class="records-body" id="recordsBody">
+      <div class="no-records">暂无记录 · 每日21:00截止后自动生成</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 数据配置
+// ============================================================
+const students = [{"num":1,"name":"李谨修"},{"num":2,"name":"林嘉楠"},{"num":3,"name":"卢厚朴"},{"num":4,"name":"秦显昊"},{"num":5,"name":"沈小哲"},{"num":6,"name":"施秉言"},{"num":7,"name":"王梵畅"},{"num":8,"name":"余星昊"},{"num":9,"name":"张轶伦"},{"num":10,"name":"黄靖萱"},{"num":11,"name":"黎羽桐"},{"num":12,"name":"刘妮可"},{"num":13,"name":"滕思远"},{"num":14,"name":"吴姝瑶"},{"num":15,"name":"谢亦欣"},{"num":16,"name":"徐嘉浛"},{"num":17,"name":"徐若馨"},{"num":18,"name":"张维芸"},{"num":19,"name":"张席语"},{"num":20,"name":"张羽曈"},{"num":21,"name":"章宇桐"}];
+const subjects = ['语文','数学','英语','科学','社会'];
+const subjKeys = ['chinese','math','english','science','social'];
+const subjColors = [
+  { dot: '#ef9a9a', label: '🔴', bg: '#ffebee', color: '#c62828' },
+  { dot: '#ffcc02', label: '🟠', bg: '#fff3e0', color: '#e65100' },
+  { dot: '#fff176', label: '🟡', bg: '#fffde7', color: '#f57f17' },
+  { dot: '#a5d6a7', label: '🟢', bg: '#e8f5e9', color: '#2e7d32' },
+  { dot: '#90caf9', label: '🔵', bg: '#e3f2fd', color: '#1565c0' }
+];
+const TOTAL = students.length * subjects.length;
+const DEADLINE_HOUR = 21;
+const RECORDS_KEY = 'hw_7b_missing_records';
+
+// API 地址（自动适配，同一服务器）
+const API_BASE = window.location.origin;
+const IS_SERVER = window.location.protocol !== 'file:';
+
+// ============================================================
+// 状态
+// ============================================================
+let state = {};
+let history = [];
+let currentDate = '';
+let deadlineTimer = null;
+let hwPollTimer = null;
+let isEditMode = false;
+let currentHomework = { chinese:'', math:'', english:'', science:'', social:'' };
+let isTeacherMode = false; // 老师模式：可编辑
+
+// ============================================================
+// 作业相关
+// ============================================================
+function buildHomeworkGrid() {
+  const grid = document.getElementById('homeworkGrid');
+  grid.innerHTML = '';
+  subjects.forEach((sub, si) => {
+    const div = document.createElement('div');
+    div.className = 'hw-subject';
+    const key = subjKeys[si];
+    div.innerHTML = `
+      <div class="hw-subject-label">
+        <span class="dot" style="background:${subjColors[si].dot}"></span>
+        <span style="color:${subjColors[si].color}">${sub}</span>
+      </div>
+      <div class="hw-text-display" id="hwDisplay_${key}">暂无作业</div>
+      <div class="hw-format-bar" id="hwFmtBar_${key}">
+        <button class="hw-fmt-btn" onclick="fmtBold('hwEdit_${key}',event)" title="加粗"><b>B</b></button>
+        <button class="hw-fmt-btn" onclick="fmtHighlight('hwEdit_${key}','#FFEB3B',event)" title="黄色高光"><span class="hw-fmt-color-dot" style="background:#FFEB3B"></span>高光</button>
+        <button class="hw-fmt-btn" onclick="fmtHighlight('hwEdit_${key}','#A5D6A7',event)" title="绿色高光"><span class="hw-fmt-color-dot" style="background:#A5D6A7"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtHighlight('hwEdit_${key}','#FFCDD2',event)" title="红色高光"><span class="hw-fmt-color-dot" style="background:#FFCDD2"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtHighlight('hwEdit_${key}','#BBDEFB',event)" title="蓝色高光"><span class="hw-fmt-color-dot" style="background:#BBDEFB"></span></button>
+        <span style="color:#ccc;margin:0 2px;">|</span>
+        <button class="hw-fmt-btn" onclick="fmtForeColor('hwEdit_${key}','#c62828',event)" title="红字"><span class="hw-fmt-color-dot" style="background:#c62828"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtForeColor('hwEdit_${key}','#1565c0',event)" title="蓝字"><span class="hw-fmt-color-dot" style="background:#1565c0"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtForeColor('hwEdit_${key}','#2e7d32',event)" title="绿字"><span class="hw-fmt-color-dot" style="background:#2e7d32"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtForeColor('hwEdit_${key}','#e65100',event)" title="橙字"><span class="hw-fmt-color-dot" style="background:#e65100"></span></button>
+        <button class="hw-fmt-btn" onclick="fmtForeColor('hwEdit_${key}','#333333',event)" title="黑字（还原）">A</button>
+        <span style="color:#ccc;margin:0 2px;">|</span>
+        <button class="hw-fmt-btn" onclick="fmtClear('hwEdit_${key}',event)" title="清除格式">✕ 清除</button>
+        <span style="color:#ccc;margin:0 2px;">|</span>
+        <button class="hw-fmt-btn" onclick="fmtFontSize('hwEdit_${key}','14px',event)" title="小号">A₋</button>
+        <button class="hw-fmt-btn" onclick="fmtFontSize('hwEdit_${key}','20px',event)" title="正常">A</button>
+        <button class="hw-fmt-btn" onclick="fmtFontSize('hwEdit_${key}','28px',event)" title="大号">A₊</button>
+      </div>
+      <div class="hw-editable" id="hwEdit_${key}" contenteditable="true" data-placeholder="填写${sub}作业内容...换行自动分行" style="display:none"></div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function renderHomework(hw) {
+  currentHomework = hw || { chinese:'', math:'', english:'', science:'', social:'', reminder:'' };
+  subjKeys.forEach((key, si) => {
+    const display = document.getElementById('hwDisplay_' + key);
+    const edit = document.getElementById('hwEdit_' + key);
+    const val = currentHomework[key] || '';
+    if (display) {
+      display.innerHTML = val || '暂无';
+      display.className = 'hw-text-display' + (val ? '' : ' empty');
+    }
+    if (edit) edit.innerHTML = val;
+  });
+  // 提醒事项
+  renderReminder(currentHomework.reminder || '');
+}
+
+function renderReminder(val) {
+  const display = document.getElementById('reminderDisplay');
+  const edit = document.getElementById('reminderEdit');
+  if (display) {
+    display.innerHTML = val || '暂无提醒';
+    display.className = 'reminder-text-display' + (val ? '' : ' empty');
+  }
+  if (edit) edit.innerHTML = val || '';
+}
+
+// ============================================================
+// 格式化工具栏函数
+// ============================================================
+function fmtBold(id, e) { e.preventDefault(); focusEditor(id); document.execCommand('bold', false, null); updateFmtBtns(id); }
+function fmtHighlight(id, color, e) {
+  e.preventDefault(); focusEditor(id);
+  // 用背景色实现高光
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand('backColor', false, color);
+  updateFmtBtns(id);
+}
+function fmtForeColor(id, color, e) {
+  e.preventDefault(); focusEditor(id);
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand('foreColor', false, color);
+  updateFmtBtns(id);
+}
+function fmtClear(id, e) {
+  e.preventDefault(); focusEditor(id);
+  document.execCommand('removeFormat', false, null);
+  updateFmtBtns(id);
+}
+// 字号调整：直接用 Range API 包裹选中文字为 <span style="font-size:XXpx">
+function fmtFontSize(id, size, e) {
+  e.preventDefault();
+  focusEditor(id);
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  const text = range.toString();
+  if (!text.trim()) return;
+  // 创建带字号的 span 替换选中文字
+  const span = document.createElement('span');
+  span.style.fontSize = size;
+  span.textContent = text;
+  range.deleteContents();
+  range.insertNode(span);
+  // 恢复光标
+  sel.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.setStartAfter(span);
+  newRange.collapse(true);
+  sel.addRange(newRange);
+  updateFmtBtns(id);
+}
+function focusEditor(id) {
+  const el = document.getElementById(id);
+  if (el) el.focus();
+}
+function updateFmtBtns(id) {
+  // 高亮当前状态
+  const bar = document.getElementById('hwFmtBar_' + id.replace('hwEdit_',''));
+  if (!bar) return;
+  const btns = bar.querySelectorAll('.hw-fmt-btn');
+  btns.forEach(b => {
+    if (b.textContent === 'B') {
+      b.classList.toggle('active', document.queryCommandState('bold'));
+    }
+  });
+}
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('toggleEditBtn');
+  const editBar = document.getElementById('hwEditBar');
+  subjKeys.forEach(key => {
+    const display = document.getElementById('hwDisplay_' + key);
+    const edit = document.getElementById('hwEdit_' + key);
+    const fmtBar = document.getElementById('hwFmtBar_' + key);
+    if (display && edit) {
+      display.style.display = isEditMode ? 'none' : '';
+      edit.style.display = isEditMode ? '' : 'none';
+      edit.innerHTML = currentHomework[key] || '';
+    }
+    if (fmtBar) fmtBar.classList.toggle('show', isEditMode);
+  });
+  // 提醒事项编辑切换
+  const remDisplay = document.getElementById('reminderDisplay');
+  const remEdit = document.getElementById('reminderEdit');
+  const remFmtBar = document.getElementById('reminderFmtBar');
+  const saveRemBtn = document.getElementById('saveReminderBtn');
+  if (remDisplay && remEdit) {
+    remDisplay.style.display = isEditMode ? 'none' : '';
+    remEdit.style.display = isEditMode ? '' : 'none';
+    remEdit.innerHTML = currentHomework.reminder || '';
+  }
+  if (remFmtBar) remFmtBar.classList.toggle('show', isEditMode);
+  if (saveRemBtn) saveRemBtn.style.display = isEditMode ? '' : 'none';
+  btn.textContent = isEditMode ? '👁 查看模式' : '✏️ 编辑作业';
+  editBar.style.display = isEditMode ? 'flex' : 'none';
+  if (isEditMode) {
+    if (hwPollTimer) { clearInterval(hwPollTimer); hwPollTimer = null; }
+  } else {
+    startHwPolling();
+  }
+}
+
+async function saveHomework() {
+  const hw = {};
+  subjKeys.forEach(key => {
+    const edit = document.getElementById('hwEdit_' + key);
+    hw[key] = edit ? edit.innerHTML.trim() : '';
+  });
+  // 保存提醒
+  const remEdit = document.getElementById('reminderEdit');
+  hw.reminder = remEdit ? remEdit.innerHTML.trim() : '';
+  if (IS_SERVER) {
+    try {
+      const resp = await fetch(API_BASE + '/api/homework', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: currentDate, homework: hw })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        renderHomework(hw);
+        flashHwSaved();
+        showToast('✅ 作业已保存并同步');
+      }
+    } catch (e) {
+      showToast('❌ 保存失败，请检查网络');
+    }
+  } else {
+    // 离线模式：存 localStorage
+    const allHw = JSON.parse(localStorage.getItem('hw_7b_homework') || '{}');
+    allHw[currentDate] = hw;
+    localStorage.setItem('hw_7b_homework', JSON.stringify(allHw));
+    renderHomework(hw);
+    flashHwSaved();
+    showToast('✅ 作业已保存（离线模式）');
+  }
+}
+
+function flashHwSaved() {
+  const el = document.getElementById('hwSaveHint');
+  if (el) {
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.style.opacity = '0', 2000);
+  }
+  const ts = document.getElementById('hwLastUpdated');
+  if (ts) ts.textContent = '最后更新：' + new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+}
+
+async function saveReminder() {
+  const remEdit = document.getElementById('reminderEdit');
+  const val = remEdit ? remEdit.innerHTML.trim() : '';
+  currentHomework.reminder = val;
+  // 更新所有学科内容（不变）
+  subjKeys.forEach(key => {
+    const edit = document.getElementById('hwEdit_' + key);
+    if (edit) currentHomework[key] = edit.innerHTML.trim();
+  });
+  if (IS_SERVER) {
+    try {
+      const resp = await fetch(API_BASE + '/api/homework', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: currentDate, homework: currentHomework })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        renderReminder(val);
+        showToast('✅ 提醒已保存并同步');
+      }
+    } catch (e) {
+      showToast('❌ 保存失败，请检查网络');
+    }
+  } else {
+    const allHw = JSON.parse(localStorage.getItem('hw_7b_homework') || '{}');
+    allHw[currentDate] = currentHomework;
+    localStorage.setItem('hw_7b_homework', JSON.stringify(allHw));
+    renderReminder(val);
+    showToast('✅ 提醒已保存（离线模式）');
+  }
+}
+
+// ============================================================
+// 图片粘贴 & 插入（广播台）
+// ============================================================
+document.addEventListener('paste', function(e) {
+  const active = document.activeElement;
+  // 只在 reminderEdit 或 hwEdit 编辑框内处理图片粘贴
+  if (!active || (!active.id.startsWith('hwEdit_') && active.id !== 'reminderEdit')) return;
+  if (!active.isContentEditable) return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      e.preventDefault();
+      const blob = items[i].getAsFile();
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.style.maxWidth = '100%';
+        // 插入到光标位置
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(img);
+          // 光标移到图片后面
+          range.setStartAfter(img);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          active.appendChild(img);
+        }
+      };
+      reader.readAsDataURL(blob);
+      break;
+    }
+  }
+});
+
+function insertReminderImage() {
+  document.getElementById('reminderImgInput').click();
+}
+
+function handleReminderImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const active = document.getElementById('reminderEdit');
+    if (!active) return;
+    active.focus();
+    const img = document.createElement('img');
+    img.src = ev.target.result;
+    img.style.maxWidth = '100%';
+    const sel = window.getSelection();
+    if (sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(img);
+      range.setStartAfter(img);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      active.appendChild(img);
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = ''; // 允许重复选同一文件
+}
+
+async function fetchHomework(date) {
+  if (IS_SERVER) {
+    try {
+      const resp = await fetch(API_BASE + '/api/homework?date=' + date);
+      const data = await resp.json();
+      renderHomework(data.homework);
+      document.getElementById('hwSyncBadge').textContent = '🟢 已同步';
+      fetchSchedule(date);
+      // 同步拉取最新提交状态
+      fetchState(date);
+    } catch (e) {
+      document.getElementById('hwSyncBadge').textContent = '🔴 无法连接服务器';
+    }
+  } else {
+    // 离线模式
+    const allHw = JSON.parse(localStorage.getItem('hw_7b_homework') || '{}');
+    const hw = allHw[date] || null;
+    if (hw && !hw.reminder) hw.reminder = '';
+    renderHomework(hw);
+    document.getElementById('hwSyncBadge').textContent = '📴 离线模式';
+  }
+}
+
+// 从服务器拉取最新提交状态并合并到本地
+async function fetchState(date) {
+  if (!IS_SERVER) return;
+  try {
+    const resp = await fetch(API_BASE + '/api/state?date=' + date);
+    const data = await resp.json();
+    if (data.state && Object.keys(data.state).length > 0) {
+      // 合并服务器状态到本地（服务器为准）
+      Object.assign(state, data.state);
+      // 同步到本地 localStorage
+      localStorage.setItem(getDateKey(date), JSON.stringify(state));
+      // 更新 UI
+      updateTagsUI();
+      updateStats();
+    }
+  } catch (e) {}
+}
+
+// 根据 state 刷新所有标签的 UI
+function updateTagsUI() {
+  students.forEach(st => {
+    subjects.forEach((_, si) => {
+      const key = st.num + '_' + si;
+      const tag = document.getElementById('tag_' + key);
+      if (tag) {
+        if (state[key]) tag.classList.add('done');
+        else tag.classList.remove('done');
+      }
+    });
+  });
+}
+
+function startHwPolling() {
+  if (hwPollTimer) clearInterval(hwPollTimer);
+  // 每15秒刷新一次作业
+  hwPollTimer = setInterval(() => {
+    if (!isEditMode) fetchHomework(currentDate);
+  }, 15000);
+  // 每3秒刷新提交状态（实时同步学生操作，不受编辑模式影响）
+  setInterval(() => {
+    fetchState(currentDate);
+  }, 3000);
+}
+
+// ============================================================
+// 老师模式检测（URL 带 ?teacher 参数）
+// ============================================================
+function checkTeacherMode() {
+  const params = new URLSearchParams(window.location.search);
+  isTeacherMode = params.has('teacher');
+  const btn = document.getElementById('toggleEditBtn');
+  if (btn) btn.style.display = isTeacherMode ? '' : 'none';
+  // 老师端：显示发送按钮；教室端：显示静音/停止按钮
+  const sendBtn = document.getElementById('voiceSendBtn');
+  const input = document.getElementById('voiceInput');
+  const stopBtn = document.getElementById('voiceStopBtn');
+  if (isTeacherMode) {
+    if (sendBtn) sendBtn.style.display = '';
+    if (input) input.style.display = '';
+    if (stopBtn) stopBtn.style.display = 'none';
+    const muteBtn = document.getElementById('voiceMuteBtn');
+    if (muteBtn) muteBtn.style.display = 'none';
+    document.getElementById('voiceStatus').textContent = '就绪';
+    // 老师端：显示课表编辑按钮
+    const schEditBtn = document.getElementById('scheduleEditBtn');
+    if (schEditBtn) schEditBtn.style.display = '';
+  } else {
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (input) input.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'none';
+    // 教室端显示静音/取消静音按钮
+    const muteBtn = document.getElementById('voiceMuteBtn');
+    if (muteBtn) { muteBtn.style.display = ''; muteBtn.textContent = '🔇 静音'; }
+    document.getElementById('voiceStatus').textContent = '🎧 准备监听...';
+    // 教室端：隐藏课表编辑按钮
+    const schEditBtn = document.getElementById('scheduleEditBtn');
+    if (schEditBtn) schEditBtn.style.display = 'none';
+  }
+}
+
+// ============================================================
+// 上交状态管理（localStorage）
+// ============================================================
+function getDateKey(date) { return 'hw_7b_state_' + date; }
+const REC_KEY = 'hw_7b_missing_records';
+
+function loadState(date) {
+  const saved = localStorage.getItem(getDateKey(date));
+  if (saved) { try { return JSON.parse(saved); } catch(e) {} }
+  const s = {};
+  students.forEach(st => subjects.forEach((_, si) => { s[st.num + '_' + si] = false; }));
+  return s;
+}
+function saveState() {
+  localStorage.setItem(getDateKey(currentDate), JSON.stringify(state));
+  const ind = document.getElementById('saveIndicator');
+  if (ind) {
+    ind.style.opacity = '1';
+    clearTimeout(ind._timer);
+    ind._timer = setTimeout(() => { ind.style.opacity = '0'; }, 1500);
+  }
+  // 同步到服务器
+  syncStateToServer();
+}
+
+// 同步提交状态到服务器
+let syncStateTimer = null;
+function syncStateToServer() {
+  if (!IS_SERVER) return;
+  // 防抖：300ms 内的多次操作合并为一次
+  if (syncStateTimer) clearTimeout(syncStateTimer);
+  syncStateTimer = setTimeout(() => {
+    fetch(API_BASE + '/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: currentDate, state: state })
+    }).catch(() => {});
+  }, 300);
+}
+
+function loadRecords() {
+  const saved = localStorage.getItem(REC_KEY);
+  if (saved) { try { return JSON.parse(saved); } catch(e) {} }
+  return {};
+}
+function saveRecords(r) { localStorage.setItem(REC_KEY, JSON.stringify(r)); }
+
+function computeMissing() {
+  const missing = [];
+  students.forEach(s => {
+    const ms = subjects.map((_, si) => si).filter(si => !state[s.num + '_' + si]);
+    if (ms.length > 0) missing.push({ num: s.num, name: s.name, subjects: ms });
+  });
+  return missing;
+}
+
+function snapMissing(auto) {
+  const missing = computeMissing();
+  const records = loadRecords();
+  if (records[currentDate] && !auto) {
+    if (!confirm('今天的未交记录已存在，确定要覆盖吗？')) return;
+  }
+  records[currentDate] = {
+    date: currentDate,
+    snappedAt: new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }),
+    missing, total: students.length, totalSubj: TOTAL
+  };
+  saveRecords(records);
+  renderRecords();
+  showToast(auto ? '⏰ 已自动生成今日未交记录' : '📸 已保存今日未交记录');
+  updateDeadlineBar();
+}
+
+function getToday() {
+  const n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+}
+
+function isAfterDeadline() {
+  const now = new Date();
+  return currentDate === getToday() && now.getHours() >= DEADLINE_HOUR;
+}
+
+function updateDeadlineBar() {
+  const bar = document.getElementById('deadlineActionBar');
+  const badge = document.getElementById('deadlineBadge');
+  const snapArea = document.getElementById('snapBtnArea');
+  const hint = document.getElementById('deadlineHint');
+  if (isAfterDeadline()) {
+    bar.style.display = 'flex';
+    badge.textContent = '🔴 已过截止';
+    badge.style.cssText = 'background:rgba(244,67,54,.25);border-color:rgba(244,67,54,.5);color:#ff8a80;font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid';
+    const rec = loadRecords();
+    if (rec[currentDate]) {
+      hint.textContent = '✅ 今日未交记录已生成（' + rec[currentDate].snappedAt + '）· 可重新生成覆盖';
+      snapArea.innerHTML = '<button class="btn-snap" onclick="snapMissing()">🔄 重新生成</button>';
+    } else {
+      hint.textContent = '⚠️ 已到截止时间（21:00），请点击"生成今日未交记录"保存未交名单。';
+      snapArea.innerHTML = '<button class="btn-snap" onclick="snapMissing()">📸 生成今日未交记录</button>';
+    }
+  } else {
+    bar.style.display = 'none';
+    badge.textContent = '⏰ 截止 21:00';
+    badge.style.cssText = '';
+  }
+  updateExportCount();
+}
+
+function scheduleDeadlineCheck() {
+  if (deadlineTimer) clearInterval(deadlineTimer);
+  deadlineTimer = setInterval(() => {
+    updateDeadlineBar();
+    const now = new Date();
+    // 21:00整点自动生成快照
+    if (currentDate === getToday() && now.getHours() === DEADLINE_HOUR && now.getMinutes() <= 2) {
+      const recs = loadRecords();
+      if (!recs[currentDate]) {
+        snapMissing(true);
+        updateExportCount();
+      }
+    }
+  }, 30000);
+}
+
+// ============================================================
+// 实时时钟（24小时制，黄色加粗，标题栏显示）
+// ============================================================
+let clockTimer = null;
+function startClock() {
+  if (clockTimer) clearInterval(clockTimer);
+  function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const el = document.getElementById('liveClock');
+    if (el) el.textContent = '⏰ ' + h + ':' + m;
+  }
+  tick();
+  clockTimer = setInterval(tick, 1000);
+}
+
+// ============================================================
+// 上交标签操作
+// ============================================================
+function toggleTag(num, si) {
+  const key = num + '_' + si;
+  const prev = state[key];
+  state[key] = !prev;
+  history.push({ key, prev });
+  saveState();
+  const tag = document.getElementById('tag_' + key);
+  if (tag) {
+    if (state[key]) { tag.classList.add('done'); showToast('✅ ' + num + '号' + subjects[si] + ' 已标记上交'); }
+    else { tag.classList.remove('done'); showToast('↩ 取消标记'); }
+  }
+  updateStats();
+  updateUndoBtn();
+}
+function undoLast() {
+  if (!history.length) return;
+  const last = history.pop();
+  state[last.key] = last.prev;
+  saveState();
+  const tag = document.getElementById('tag_' + last.key);
+  if (tag) { state[last.key] ? tag.classList.add('done') : tag.classList.remove('done'); }
+  updateStats(); updateUndoBtn();
+  showToast('↩ 已撤回上一步操作');
+}
+function resetAll() {
+  if (!confirm('确定要重置今天的所有记录吗？')) return;
+  students.forEach(st => subjects.forEach((_, si) => { state[st.num + '_' + si] = false; }));
+  history = []; saveState(); renderState(); updateStats(); updateUndoBtn();
+  showToast('🔄 已重置全部记录');
+}
+function renderState() {
+  students.forEach(st => subjects.forEach((_, si) => {
+    const tag = document.getElementById('tag_' + st.num + '_' + si);
+    if (tag) { state[st.num + '_' + si] ? tag.classList.add('done') : tag.classList.remove('done'); }
+  }));
+}
+function updateStats() {
+  let done = 0;
+  Object.values(state).forEach(v => { if (v) done++; });
+  document.getElementById('stats').textContent = '已交: ' + done + ' / ' + TOTAL;
+  document.getElementById('progressFill').style.width = (done / TOTAL * 100).toFixed(1) + '%';
+}
+function updateUndoBtn() {
+  document.getElementById('undoBtn').disabled = history.length === 0;
+}
+
+// ============================================================
+// 渲染表格
+// ============================================================
+function buildTable() {
+  const list = document.getElementById('studentList');
+  list.innerHTML = '';
+  students.forEach(st => {
+    const row = document.createElement('div');
+    row.className = 'student-row';
+    const numCell = document.createElement('div');
+    numCell.className = 'num-cell';
+    numCell.textContent = st.num + '号';
+    row.appendChild(numCell);
+    subjects.forEach((sub, si) => {
+      const cell = document.createElement('div');
+      cell.className = 'subject-cell';
+      const tag = document.createElement('div');
+      tag.className = 'tag subj-' + si;
+      tag.id = 'tag_' + st.num + '_' + si;
+      tag.textContent = st.num + '号' + st.name + '\n' + sub;
+      tag.style.whiteSpace = 'pre-line';
+      tag.onclick = () => toggleTag(st.num, si);
+      cell.appendChild(tag);
+      row.appendChild(cell);
+    });
+    list.appendChild(row);
+  });
+}
+
+// ============================================================
+// 未交记录面板（按学科分组）
+// ============================================================
+let exportRange = 'today';
+
+function setExportRange(range, btn) {
+  exportRange = range;
+  document.querySelectorAll('.export-range-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (range === 'custom') {
+    document.querySelectorAll('.export-range-btn').forEach(b => b.classList.remove('active'));
+  }
+  updateExportCount();
+}
+
+function getRangeDates() {
+  const records = loadRecords();
+  const allDates = Object.keys(records).sort();
+  if (!allDates.length) return [];
+  const today = getToday();
+  if (exportRange === 'today') return allDates.filter(d => d === today);
+  if (exportRange === 'week') {
+    const now = new Date();
+    const dayOfWeek = now.getDay() || 7;
+    const monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek + 1);
+    const mondayStr = monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
+    return allDates.filter(d => d >= mondayStr && d <= today);
+  }
+  if (exportRange === 'month') {
+    const m = today.substring(0, 7);
+    return allDates.filter(d => d.startsWith(m));
+  }
+  if (exportRange === 'custom') {
+    const s = document.getElementById('exportStart').value;
+    const e = document.getElementById('exportEnd').value;
+    return allDates.filter(d => (!s || d >= s) && (!e || d <= e));
+  }
+  return allDates;
+}
+
+function updateExportCount() {
+  const dates = getRangeDates();
+  document.getElementById('exportCount').textContent = dates.length ? `(${dates.length}天)` : '';
+}
+
+function computeSubjectMissing() {
+  // 返回 { chinese: [names], math: [names], ... }
+  const r = {};
+  subjects.forEach((_, si) => { r[si] = []; });
+  students.forEach(s => {
+    subjects.forEach((_, si) => {
+      if (!state[s.num + '_' + si]) r[si].push(s.num + '号' + s.name);
+    });
+  });
+  return r;
+}
+
+function snapMissing(auto) {
+  const sm = computeSubjectMissing();
+  const records = loadRecords();
+  if (records[currentDate] && !auto) {
+    if (!confirm('今天的未交记录已存在，确定要覆盖吗？')) return;
+  }
+  // 计算总统计
+  let totalMissingSubj = 0;
+  subjects.forEach((_, si) => { totalMissingSubj += sm[si].length; });
+  records[currentDate] = {
+    date: currentDate,
+    snappedAt: new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }),
+    subjectMissing: sm,
+    totalMissingSubj,
+    totalStudents: students.length
+  };
+  saveRecords(records);
+  renderRecords();
+  showToast(auto ? '⏰ 已自动生成今日未交记录' : '📸 已保存今日未交记录');
+  updateDeadlineBar();
+  updateExportCount();
+}
+
+function renderRecords() {
+  const records = loadRecords();
+  const body = document.getElementById('recordsBody');
+  const allDates = Object.keys(records).sort().reverse();
+  if (!allDates.length) {
+    body.innerHTML = '<div class="no-records">暂无记录 · 每日21:00截止后自动生成</div>';
+    updateExportCount();
+    return;
+  }
+  // 只展示导出范围内的日期
+  const rangeDates = getRangeDates().reverse();
+  if (!rangeDates.length) {
+    body.innerHTML = '<div class="no-records">所选范围内无记录</div>';
+    updateExportCount();
+    return;
+  }
+  body.innerHTML = '';
+  rangeDates.forEach(date => {
+    const rec = records[date];
+    const sm = rec.subjectMissing || {};
+    const div = document.createElement('div');
+    div.className = 'record-day';
+    const missingCount = rec.totalMissingSubj || 0;
+    const hdr = document.createElement('div');
+    hdr.className = 'record-day-header';
+    hdr.innerHTML = `<span>📅 ${date} <span style="color:#888;font-weight:400;font-size:13px">截止于 ${rec.snappedAt||'21:00'}</span></span>
+      <span>${missingCount > 0 ? `<span class="record-count-badge">${missingCount}科未交</span>` : '<span style="color:#43a047;font-size:13px">✅ 全部上交</span>'}
+      <span style="margin-left:8px;color:#888;font-size:12px">▾</span></span>`;
+    div.appendChild(hdr);
+    const content = document.createElement('div');
+    content.className = 'record-day-content';
+    const summary = document.createElement('div');
+    summary.className = 'subject-summary';
+    subjects.forEach((sub, si) => {
+      const line = document.createElement('div');
+      line.className = 'subject-line';
+      const missingStudents = sm[si] || [];
+      if (missingStudents.length === 0) {
+        line.innerHTML = `<span class="subj-label-tag"><span class="subj-dot-sm" style="background:${subjColors[si].dot}"></span>${sub}：</span><span class="subj-done-badge">齐 ✅</span>`;
+      } else {
+        const tags = missingStudents.map(name => {
+          const siColor = subjColors[si];
+          return `<span class="name-tag" style="background:${siColor.bg};color:${siColor.color};border:1px solid ${siColor.dot}">${name}</span>`;
+        }).join('');
+        line.innerHTML = `<span class="subj-label-tag"><span class="subj-dot-sm" style="background:${subjColors[si].dot}"></span>${sub}：</span><span class="subj-missing-list">${tags} <span style="color:#999;font-size:12px">（${missingStudents.length}人）</span></span>`;
+      }
+      summary.appendChild(line);
+    });
+    content.appendChild(summary);
+    let collapsed = false;
+    hdr.onclick = () => {
+      collapsed = !collapsed;
+      content.classList.toggle('collapsed', collapsed);
+      const arrow = hdr.querySelector('span:last-child > span:last-child');
+      if (arrow) arrow.textContent = collapsed ? '▸' : '▾';
+    };
+    div.appendChild(content);
+    body.appendChild(div);
+  });
+  updateExportCount();
+}
+
+function clearAllRecords() {
+  if (!confirm('确定要清空所有未交记录吗？此操作不可恢复。')) return;
+  localStorage.removeItem(REC_KEY);
+  renderRecords();
+  showToast('🗑 已清空全部历史记录');
+}
+
+function scrollToRecords() {
+  document.getElementById('recordsSection').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ============================================================
+// 导出（按日期范围）
+// ============================================================
+function exportByRange(format) {
+  const records = loadRecords();
+  const dates = getRangeDates();
+  if (!dates.length) { showToast('所选范围内暂无记录'); return; }
+
+  if (format === 'csv') exportCSVRange(records, dates);
+  else exportTXTRange(records, dates);
+}
+
+function exportCSVRange(records, dates) {
+  let csv = '\uFEFF日期,截止时间,学科,未交情况\n';
+  dates.forEach(date => {
+    const rec = records[date];
+    if (!rec) return;
+    const sm = rec.subjectMissing || {};
+    subjects.forEach((sub, si) => {
+      const missing = sm[si] || [];
+      const names = missing.length === 0 ? '齐' : missing.join('、');
+      csv += `${date},${rec.snappedAt||'21:00'},${sub},${names}\n`;
+    });
+  });
+  const label = exportRange === 'today' ? '今日' : exportRange === 'week' ? '本周' : exportRange === 'month' ? '本月' : '全部';
+  downloadFile(`7B班未交记录_${label}.csv`, csv, 'text/csv;charset=utf-8');
+  showToast('✅ CSV 已导出（' + label + '）');
+}
+
+function exportTXTRange(records, dates) {
+  let txt = '7B班作业未交记录\n' + '='.repeat(50) + '\n\n';
+  dates.forEach(date => {
+    const rec = records[date];
+    if (!rec) return;
+    txt += `【${date}】截止时间：${rec.snappedAt||'21:00'}\n`;
+    const sm = rec.subjectMissing || {};
+    subjects.forEach((sub, si) => {
+      const missing = sm[si] || [];
+      if (missing.length === 0) txt += `  ${sub}：齐 ✅\n`;
+      else txt += `  ${sub}：${missing.join('、')}（${missing.length}人）\n`;
+    });
+    txt += '\n';
+  });
+  const label = exportRange === 'today' ? '今日' : exportRange === 'week' ? '本周' : exportRange === 'month' ? '本月' : '全部';
+  downloadFile(`7B班未交记录_${label}.txt`, txt, 'text/plain;charset=utf-8');
+  showToast('✅ 文本已导出（' + label + '）');
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// Toast
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ============================================================
+// 今日课表功能
+// ============================================================
+const SCHEDULE_PERIODS = ['早读','第一节','第二节','第三节','第四节','第五节','第六节','第七节','第八节','晚自习'];
+let scheduleData = {};   // { date: ['语文','数学',...] }
+let isScheduleEdit = false;
+
+// 初始化课表数据
+function initScheduleData() {
+  const saved = localStorage.getItem('hw_7b_schedule');
+  if (saved) {
+    try { scheduleData = JSON.parse(saved); } catch(e) { scheduleData = {}; }
+  }
+}
+function saveScheduleData() {
+  localStorage.setItem('hw_7b_schedule', JSON.stringify(scheduleData));
+}
+
+// 渲染课表格子
+function renderSchedule() {
+  const grid = document.getElementById('scheduleGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const dayData = scheduleData[currentDate] || [];
+  SCHEDULE_PERIODS.forEach((p, i) => {
+    // 第4节(index=4)渲染完后插入"午休"分隔
+    if (i === 5) {
+      const brk = document.createElement('span');
+      brk.className = 'schedule-break';
+      brk.textContent = '午休';
+      grid.appendChild(brk);
+    }
+    const cell = document.createElement('div');
+    const isEmpty = !dayData[i];
+    cell.className = 'schedule-cell' + (isEmpty ? ' is-empty' : '');
+    const label = document.createElement('span');
+    label.className = 'cell-label';
+    label.textContent = p;
+    cell.appendChild(label);
+    if (isScheduleEdit) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'cell-input';
+      input.value = dayData[i] || '';
+      input.placeholder = (i === 9) ? '老师名字' : '输入科目';
+      input.maxLength = 8;
+      input.oninput = () => {
+        if (!scheduleData[currentDate]) scheduleData[currentDate] = new Array(10).fill('');
+        scheduleData[currentDate][i] = input.value.trim();
+      };
+      cell.appendChild(input);
+    } else {
+      const text = document.createElement('span');
+      text.className = 'cell-text';
+      text.textContent = dayData[i] || '—';
+      cell.appendChild(text);
+    }
+    grid.appendChild(cell);
+  });
+}
+
+function toggleScheduleEdit() {
+  if (!isTeacherMode) return;
+  isScheduleEdit = !isScheduleEdit;
+  const editBtn = document.getElementById('scheduleEditBtn');
+  const saveBar = document.getElementById('scheduleSaveBar');
+  if (isScheduleEdit) {
+    editBtn.textContent = '👁 查看模式';
+    if (saveBar) saveBar.style.display = 'flex';
+  } else {
+    editBtn.textContent = '✏️ 编辑课表';
+    if (saveBar) saveBar.style.display = 'none';
+  }
+  renderSchedule();
+}
+
+function saveSchedule() {
+  saveScheduleData();
+  // 同步到服务器
+  if (IS_SERVER) {
+    fetch(API_BASE + '/api/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: currentDate, schedule: scheduleData[currentDate] || new Array(10).fill('') })
+    }).then(resp => resp.json()).then(data => {
+      if (data.ok) {
+        // 闪烁保存提示
+        const hint = document.getElementById('scheduleSaveHint');
+        if (hint) {
+          hint.style.opacity = '1';
+          clearTimeout(hint._t);
+          hint._t = setTimeout(() => hint.style.opacity = '0', 2000);
+        }
+        document.getElementById('hwSyncBadge').textContent = '🟢 已同步';
+      }
+    }).catch(() => {});
+  } else {
+    // 离线模式也闪烁提示
+    const hint = document.getElementById('scheduleSaveHint');
+    if (hint) {
+      hint.style.opacity = '1';
+      clearTimeout(hint._t);
+      hint._t = setTimeout(() => hint.style.opacity = '0', 2000);
+    }
+  }
+  showToast('✅ 今日课表已保存');
+  // 退出编辑模式，切换到查看
+  isScheduleEdit = false;
+  const editBtn = document.getElementById('scheduleEditBtn');
+  const saveBar = document.getElementById('scheduleSaveBar');
+  if (editBtn) editBtn.textContent = '✏️ 编辑课表';
+  if (saveBar) saveBar.style.display = 'none';
+  renderSchedule();
+}
+
+// 从服务器获取课表
+async function fetchSchedule(date) {
+  if (!IS_SERVER) { renderSchedule(); return; }
+  // 编辑课表时不从服务器拉取，避免覆盖正在编辑的内容
+  if (isScheduleEdit) return;
+  try {
+    const resp = await fetch(API_BASE + '/api/schedule?date=' + date);
+    const data = await resp.json();
+    if (data.schedule) {
+      scheduleData[data.date] = data.schedule;
+      saveScheduleData(); // 本地也存一份
+    }
+  } catch (e) {}
+  renderSchedule();
+}
+
+// 日期切换时刷新课表
+function onDateChange() {
+  const d = document.getElementById('dateInput').value;
+  if (!d) return;
+  saveState();
+  currentDate = d;
+  state = loadState(d);
+  history = [];
+  renderState();
+  updateStats();
+  updateUndoBtn();
+  updateDeadlineBar();
+  fetchHomework(d);
+  fetchSchedule(d);   // 获取课表数据
+}
+
+// ============================================================
+// 语音广播功能
+// ============================================================
+let voiceSynth = window.speechSynthesis;
+let voiceUtterance = null;
+let voicePollTimer = null;
+let lastVoiceId = '';  // 上次播报的消息ID，避免重复
+let voiceMuted = false; // 教室端静音
+
+async function sendVoice() {
+  const input = document.getElementById('voiceInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('voiceSendBtn');
+  btn.disabled = true;
+  btn.textContent = '发送中...';
+
+  try {
+    if (IS_SERVER) {
+      const resp = await fetch(API_BASE + '/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, time: new Date().toISOString() })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        input.value = '';
+        showToast('📢 语音已发送到教室！');
+        document.getElementById('voiceStatus').textContent = '✅ 已发送';
+        // 老师端也显示发送的文字
+        showVoiceTextPreview(text);
+        setTimeout(() => { document.getElementById('voiceStatus').textContent = '就绪'; }, 2000);
+      }
+    } else {
+      // 离线模式：直接本地播报
+      speakText(text);
+      input.value = '';
+      showToast('📢 本地播报中...');
+    }
+    document.getElementById('voiceLastMsg').textContent = '👄 "' + text.substring(0, 20) + (text.length > 20 ? '...' : '') + '"';
+  } catch (e) {
+    showToast('❌ 发送失败，请检查网络');
+    document.getElementById('voiceStatus').textContent = '❌ 发送失败';
+  }
+  btn.disabled = false;
+  btn.textContent = '📢 发送播报';
+}
+
+function speakText(text) {
+  if (!voiceSynth) return;
+  // 取消当前播报
+  voiceSynth.cancel();
+  voiceUtterance = new SpeechSynthesisUtterance(text);
+  voiceUtterance.lang = 'zh-CN';
+  voiceUtterance.rate = 1.0;
+  voiceUtterance.pitch = 1.0;
+  voiceUtterance.volume = 1.0;
+
+  // 尝试选择中文语音
+  const voices = voiceSynth.getVoices();
+  const zhVoice = voices.find(v => v.lang.startsWith('zh')) || voices.find(v => v.lang === 'zh-CN');
+  if (zhVoice) voiceUtterance.voice = zhVoice;
+
+  // 读两遍：用 onend 回调再次播报
+  let repeatCount = 0;
+  const doSpeak = () => {
+    voiceSynth.cancel();
+    voiceUtterance = new SpeechSynthesisUtterance(text);
+    voiceUtterance.lang = 'zh-CN';
+    voiceUtterance.rate = 1.0;
+    voiceUtterance.pitch = 1.0;
+    voiceUtterance.volume = 1.0;
+    if (zhVoice) voiceUtterance.voice = zhVoice;
+
+    voiceUtterance.onstart = () => {
+      repeatCount++;
+      status.textContent = '🔊 播报中（第' + repeatCount + '遍）';
+      if (stopBtn) stopBtn.style.display = '';
+    };
+    voiceUtterance.onend = () => {
+      if (repeatCount < 2) {
+        // 第二遍：稍作停顿后重播
+        status.textContent = '⏳ 准备第二遍播报...';
+        setTimeout(doSpeak, 600);
+      } else {
+        status.textContent = '就绪';
+        if (stopBtn) stopBtn.style.display = 'none';
+        voiceUtterance = null;
+      }
+    };
+    voiceUtterance.onerror = () => {
+      status.textContent = '就绪';
+      if (stopBtn) stopBtn.style.display = 'none';
+      voiceUtterance = null;
+    };
+
+    voiceSynth.speak(voiceUtterance);
+  };
+
+  const stopBtn = document.getElementById('voiceStopBtn');
+  const status = document.getElementById('voiceStatus');
+  doSpeak();
+}
+
+function stopVoice() {
+  if (voiceSynth) {
+    voiceSynth.cancel();
+  }
+  document.getElementById('voiceStopBtn').style.display = 'none';
+  document.getElementById('voiceStatus').textContent = '⏹ 已停止';
+  setTimeout(() => { document.getElementById('voiceStatus').textContent = '就绪'; }, 1500);
+  voiceUtterance = null;
+}
+
+// 教室端轮询语音消息
+let lastVoiceText = '';  // 防止同一文本重复播报
+async function pollVoiceMessage() {
+  if (!IS_SERVER || isTeacherMode) return; // 只有教室端轮询
+  try {
+    const resp = await fetch(API_BASE + '/api/voice');
+    const data = await resp.json();
+    if (data.voice && data.voice.id && data.voice.id !== lastVoiceId) {
+      lastVoiceId = data.voice.id;
+      const txt = data.voice.text || '';
+      lastVoiceText = txt;
+
+      // 文字呈现：在语音面板显示广播文字
+      showVoiceText(txt);
+
+      // 教室端自动播报（读两遍）
+      if (!voiceMuted) {
+        speakText(txt);
+      } else {
+        document.getElementById('voiceStatus').textContent = '🔇 静音中（收到新消息）';
+      }
+    }
+  } catch (e) { /* 忽略轮询错误 */ }
+}
+
+// 老师端发送后预览文字
+function showVoiceTextPreview(text) {
+  let display = document.getElementById('voiceTextPreview');
+  if (!display) {
+    display = document.createElement('div');
+    display.id = 'voiceTextPreview';
+    display.style.cssText = 'flex:1;min-width:0;margin:0 10px;';
+    const panel = document.getElementById('voicePanel');
+    const h3 = panel ? panel.querySelector('h3') : null;
+    if (h3 && h3.nextSibling) {
+      panel.insertBefore(display, h3.nextSibling);
+    } else if (panel) {
+      panel.appendChild(display);
+    }
+  }
+  display.innerHTML = '<div style="background:rgba(0,0,0,0.06);border-radius:8px;padding:8px 14px;color:#333;font-size:16px;line-height:1.7;max-height:70px;overflow-y:auto;font-weight:600;">📝 已发送：<b>' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</b></div>';
+}
+
+function toggleVoiceMute() {
+  voiceMuted = !voiceMuted;
+  const muteBtn = document.getElementById('voiceMuteBtn');
+  if (voiceMuted) {
+    if (voiceSynth) voiceSynth.cancel();
+    document.getElementById('voiceStatus').textContent = '🔇 已静音';
+    if (muteBtn) muteBtn.textContent = '🔊 取消静音';
+  } else {
+    document.getElementById('voiceStatus').textContent = '🎧 监听中...';
+    if (muteBtn) muteBtn.textContent = '🔇 静音';
+  }
+  showToast(voiceMuted ? '🔇 语音已静音' : '🔊 语音已开启');
+}
+
+// 教室端收到语音广播时显示文字
+function showVoiceText(text) {
+  let display = document.getElementById('voiceTextDisplay');
+  if (!display) {
+    display = document.createElement('div');
+    display.id = 'voiceTextDisplay';
+    display.style.cssText = 'flex:1;min-width:0;margin:0 10px;';
+    const panel = document.getElementById('voicePanel');
+    const h3 = panel ? panel.querySelector('h3') : null;
+    if (h3 && h3.nextSibling) {
+      panel.insertBefore(display, h3.nextSibling);
+    } else if (panel) {
+      panel.appendChild(display);
+    }
+  }
+  display.innerHTML = '<div style="background:rgba(0,0,0,0.05);border-radius:8px;padding:6px 12px;color:#333;font-size:14px;line-height:1.6;max-height:60px;overflow-y:auto;">🔊 <b>' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</b></div>';
+}
+
+function startVoicePolling() {
+  if (voicePollTimer) clearInterval(voicePollTimer);
+  if (!IS_SERVER || isTeacherMode) return; // 教室端才轮询
+  // 首次加载 voices
+  if (voiceSynth && voiceSynth.getVoices().length === 0) {
+    voiceSynth.onvoiceschanged = () => {};
+  }
+  // 确保 voices 已加载
+  voiceSynth && voiceSynth.getVoices();
+  voicePollTimer = setInterval(pollVoiceMessage, 3000);
+  document.getElementById('voiceStatus').textContent = '🎧 监听中...';
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+(function() {
+  currentDate = getToday();
+  document.getElementById('dateInput').value = currentDate;
+  state = loadState(currentDate);
+
+  checkTeacherMode();
+  initScheduleData();
+  fetchSchedule(currentDate);
+  renderSchedule();
+  buildHomeworkGrid();
+  buildTable();
+  renderState();
+  updateStats();
+  updateUndoBtn();
+  updateDeadlineBar();
+  renderRecords();
+  updateExportCount();
+  scheduleDeadlineCheck();
+  fetchHomework(currentDate);
+  startHwPolling();
+  startVoicePolling();
+  startClock();
+
+  // 关闭/隐藏时保存
+  window.addEventListener('beforeunload', saveState);
+  window.addEventListener('pagehide', saveState);
+
+  // 恢复提示
+  let savedCount = 0;
+  Object.values(state).forEach(v => { if (v) savedCount++; });
+  if (savedCount > 0) setTimeout(() => showToast('📂 已恢复上次记录：' + savedCount + ' 科已交'), 800);
+})();
+</script>
+</body>
+</html>

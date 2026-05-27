@@ -1,0 +1,12 @@
+{
+  "name": "7b-homework",
+  "version": "1.0.0",
+  "description": "7B班作业上交统计系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
